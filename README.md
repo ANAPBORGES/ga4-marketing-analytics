@@ -50,6 +50,18 @@ This project analyzes the **GA4 → BigQuery export** of the Google Merchandise 
 | [`06_top_products.sql`](./sql/06_top_products.sql) | Top products by revenue from the nested `items` array + Pareto share |
 | [`07_device_performance.sql`](./sql/07_device_performance.sql) | Desktop vs mobile vs tablet: traffic, engagement, conversion, revenue |
 | [`08_geo_performance.sql`](./sql/08_geo_performance.sql) | Revenue and conversion by country + revenue concentration (Pareto) |
+| [`09_paid_media_economics.sql`](./sql/09_paid_media_economics.sql) | **CPC, CTR, CPA, CAC, ROAS and ROI** — a declared scenario model, with every modelled column prefixed `m_` |
+| [`10_ltv_and_max_allowable_cac.sql`](./sql/10_ltv_and_max_allowable_cac.sql) | **92-day customer value, repeat rate, LTV:CAC and maximum allowable CAC / break-even bid** per channel, on first-touch attribution |
+
+### Unit economics — [`docs/unit_economics.md`](./docs/unit_economics.md)
+
+The GA4 export contains **no cost data**: no spend, no impressions, no billed clicks. So queries 09 and 10 separate what is measured from what is assumed, and carry that separation into the column names.
+
+- **CPA is not CAC** (they differ by orders per buyer — 1.29 here, so CAC runs 29% higher). **ROAS is not ROI**: at a 35% margin, break-even is **2.86x ROAS**, so a 2.0x campaign is destroying money.
+- **92-day value is not LTV** — the window is 92 days, so the column is named `value_92d` and every ratio built on it is deliberately conservative.
+- **A quarter of users cannot be attributed** — 51,038 obfuscated + 17,948 consent-withheld. They are labelled as non-channels rather than folded into "Other", where they would have become the third-largest revenue line in the report.
+- **The actionable number is maximum allowable CAC** — it needs no cost data at all. Result: **no channel can afford the US$1.16 benchmark CPC.** The best, Referral, supports US$0.54 (47% of market rate); paid search modelled at benchmark returns **0.50x ROAS, −82.5% ROI**.
+- **A bug worth reading:** the first version attributed users with `ANY_VALUE(channel)`. It ran fine and returned a plausible table while picking an arbitrary channel per user — making paid search look like the worst channel in the account. Replaced with an explicit first-touch ordering, its allowable CPC **doubled** (US$0.214 → US$0.449) and it landed level with organic. Nothing in the broken output looked wrong.
 
 ---
 
